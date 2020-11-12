@@ -101,7 +101,7 @@ public final class FrogEspModule extends AddonModule {
             int y = (int) top.y;
 
             // draw frog
-            MC.renderEngine.bindTexture(FrogEspAddon.frog);
+            MC.getTextureManager().bindTexture(FrogEspAddon.frog);
 
             GlStateManager.color(255, 255, 255);
             Gui.drawScaledCustomSizeModalRect(
