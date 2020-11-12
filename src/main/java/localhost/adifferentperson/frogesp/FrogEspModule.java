@@ -25,34 +25,61 @@ import static org.lwjgl.opengl.GL11.*;
 public final class FrogEspModule extends AddonModule {
 
     private final Minecraft MC = Minecraft.getMinecraft();
+    private final FloatBuffer projection = GLAllocation.createDirectFloatBuffer(16);
+    private final FloatBuffer modelView = GLAllocation.createDirectFloatBuffer(16);
+    private final Matrix4f modelMatrix = new Matrix4f();
+    private final Matrix4f projectionMatrix = new Matrix4f();
 
     @SuppressWarnings("unused")
     @EventMethod
     public void onRenderLivingBase(final RenderLivingBaseEvent e) {
         final EntityLivingBase entityLivingBase = e.getEntityLivingBase();
-        if(!(entityLivingBase instanceof AbstractClientPlayer)) { return; }
-        final AbstractClientPlayer player = (AbstractClientPlayer)entityLivingBase;
-        if(player.equals(MC.player)) { return; }
+        if (!(entityLivingBase instanceof AbstractClientPlayer)) {
+            return;
+        }
+        final AbstractClientPlayer player = (AbstractClientPlayer) entityLivingBase;
+        if (player.equals(MC.player)) {
+            return;
+        }
         e.setCancelled(true);
     }
 
     @Override
+    public final void renderWorld() {
+        glGetFloat(GL_PROJECTION_MATRIX, projection);
+        glGetFloat(GL_MODELVIEW_MATRIX, modelView);
+    }
+
+    private Entity renderViewEntity;
+    private double screenWidth;
+    private double screenHeight;
+    private double halfWidth;
+    private double halfHeight;
+
+    @Override
     public void renderOverlay() {
-        for(final Entity entity : MC.world.loadedEntityList) {
-
-            if(!(entity instanceof AbstractClientPlayer)) { continue; }
-
-            final AbstractClientPlayer player = (AbstractClientPlayer)entity;
-
-            if(player.equals(MC.player)) { continue; }
-
+        renderViewEntity = MC.getRenderViewEntity();
+        if (renderViewEntity == null) {
+            return;
+        }
+        final ScaledResolution scaledResolution = new ScaledResolution(MC);
+        screenWidth = scaledResolution.getScaledWidth_double();
+        screenHeight = scaledResolution.getScaledHeight_double();
+        halfWidth = screenWidth / 2.0d;
+        halfHeight = screenHeight / 2.0d;
+        for (final Entity entity : MC.world.loadedEntityList) {
+            if (!(entity instanceof AbstractClientPlayer)) {
+                continue;
+            }
+            final AbstractClientPlayer player = (AbstractClientPlayer) entity;
+            if (player.equals(renderViewEntity)) {
+                continue;
+            }
             renderFrog(player);
-
         }
     }
 
     private void renderFrog(final AbstractClientPlayer player) {
-
         final Vec3d bottomVec = getInterpolatedPos(player, MC.getRenderPartialTicks());
         final Vec3d topVec = bottomVec.add(
                 0.0,
@@ -60,18 +87,18 @@ public final class FrogEspModule extends AddonModule {
                 0.0
         );
 
-        final Plane top = toScreen(topVec.x, topVec.y, topVec.z);
-        final Plane bottom = toScreen(bottomVec.x, bottomVec.y, bottomVec.z);
+        final ScreenPos top = toScreen(topVec.x, topVec.y, topVec.z);
+        final ScreenPos bottom = toScreen(bottomVec.x, bottomVec.y, bottomVec.z);
 
-        if(top.visible || bottom.visible) {
+        if (top.visible || bottom.visible) {
 
             final double doubleHeight = bottom.y - top.y;
-            final int height = (int)doubleHeight;
+            final int height = (int) doubleHeight;
             final double doubleWidth = doubleHeight * FrogEspAddon.frogRatio;
-            final int width = (int)(doubleHeight * FrogEspAddon.frogRatio);
+            final int width = (int) (doubleHeight * FrogEspAddon.frogRatio);
 
-            int x = (int)(top.x - doubleWidth / 2.0);
-            int y = (int)top.y;
+            int x = (int) (top.x - doubleWidth / 2.0);
+            int y = (int) top.y;
 
             // draw frog
             MC.renderEngine.bindTexture(FrogEspAddon.frog);
@@ -94,20 +121,6 @@ public final class FrogEspModule extends AddonModule {
 
     }
 
-    private static Vec3d getInterpolatedPos(final Entity entity, final double partialTicks) {
-        return new Vec3d(
-                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks,
-                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks,
-                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks
-        );
-    }
-
-    private final FloatBuffer projection = GLAllocation.createDirectFloatBuffer(16);
-    private final FloatBuffer modelView = GLAllocation.createDirectFloatBuffer(16);
-
-    private final Matrix4f modelMatrix = new Matrix4f();
-    private final Matrix4f projectionMatrix = new Matrix4f();
-
     private void vecTransformCoordinate(final Vector4f vec, final Matrix4f matrix) {
         final float x = vec.x;
         final float y = vec.y;
@@ -118,34 +131,32 @@ public final class FrogEspModule extends AddonModule {
         vec.w = (x * matrix.m03) + (y * matrix.m13) + (z * matrix.m23) + matrix.m33;
     }
 
-    public void renderWorld() {
-        glGetFloat(GL_PROJECTION_MATRIX, projection);
-        glGetFloat(GL_MODELVIEW_MATRIX, modelView);
+    private static Vec3d getInterpolatedPos(final Entity entity, final double partialTicks) {
+        return new Vec3d(
+                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks,
+                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks,
+                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks
+        );
     }
 
-    private Plane toScreen(final double x, final double y, final double z) {
-
+    private ScreenPos toScreen(final double x, final double y, final double z) {
         modelMatrix.load(modelView.asReadOnlyBuffer());
         projectionMatrix.load(projection.asReadOnlyBuffer());
 
-        final Entity view = MC.getRenderViewEntity();
-
-        if(view == null) { return new Plane(0.0, 0.0, false); }
-
         final Vec3d camPos = ActiveRenderInfo.getCameraPosition();
-        final Vec3d eyePos = ActiveRenderInfo.projectViewFromEntity(view, MC.getRenderPartialTicks());
+        final Vec3d eyePos = ActiveRenderInfo.projectViewFromEntity(renderViewEntity, MC.getRenderPartialTicks());
 
         final Vector4f pos = new Vector4f(
-                (float)((camPos.x + eyePos.x) - (float)x),
-                (float)((camPos.y + eyePos.y) - (float)y),
-                (float)((camPos.z + eyePos.z) - (float)z),
+                (float) ((camPos.x + eyePos.x) - (float) x),
+                (float) ((camPos.y + eyePos.y) - (float) y),
+                (float) ((camPos.z + eyePos.z) - (float) z),
                 1.0f
         );
 
         vecTransformCoordinate(pos, modelMatrix);
         vecTransformCoordinate(pos, projectionMatrix);
 
-        if(pos.w > 0.0f) {
+        if (pos.w > 0.0f) {
             pos.x *= -100000;
             pos.y *= -100000;
         } else {
@@ -154,36 +165,27 @@ public final class FrogEspModule extends AddonModule {
             pos.y *= invert;
         }
 
-        final ScaledResolution scaledResolution = new ScaledResolution(MC);
-        final int screenWidth = scaledResolution.getScaledWidth();
-        final int screenHeight = scaledResolution.getScaledHeight();
+        final double posX = halfWidth + (0.5 * pos.x * screenWidth + 0.5);
+        final double posY = halfHeight - (0.5 * pos.y * screenHeight + 0.5);
 
-        float halfWidth = ((float)screenWidth) / 2.0f;
-        float halfHeight = ((float)screenHeight) / 2.0f;
-
-        final double posX = halfWidth + (0.5 * pos.x * (double)screenWidth + 0.5);
-        final double posY = halfHeight - (0.5 * pos.y * (double)screenHeight + 0.5);
-
-        return new Plane(
+        return new ScreenPos(
                 posX,
                 posY,
-                !(
-                        posX < 0
-                        || posY < 0
-                        || posX > screenWidth
-                        || posY > screenHeight
-                )
+                posX >= 0
+                        && posY >= 0
+                        && posX <= screenWidth
+                        && posY <= screenHeight
         );
     }
 
-    private static class Plane {
+    private static class ScreenPos {
 
         private final double x;
         private final double y;
 
         private final boolean visible;
 
-        public Plane(final double x, final double y, final boolean visible) {
+        public ScreenPos(final double x, final double y, final boolean visible) {
             this.x = x;
             this.y = y;
             this.visible = visible;

@@ -7,10 +7,6 @@ buildscript {
             name = 'forge'
             url = 'http://files.minecraftforge.net/maven'
         }
-        maven {
-            name = 'SpongePowered'
-            url = 'http://repo.spongepowered.org/maven'
-        }
         jcenter()
     }
 
@@ -35,12 +31,15 @@ minecraft {
 
 repositories {
     mavenCentral()
-    maven {
-        name = 'spongepowered-repo'
-        url = 'http://repo.spongepowered.org/maven/'
-    }
 }
 
 dependencies {
+    compile files("./libs/rootnet-api.jar")
+}
 
+import net.minecraftforge.gradle.user.ReobfMappingType
+reobf {
+    jar {
+        setMappingType(ReobfMappingType.NOTCH)
+    }
 }

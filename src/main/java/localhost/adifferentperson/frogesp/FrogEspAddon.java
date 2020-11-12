@@ -27,11 +27,13 @@ public final class FrogEspAddon extends Addon {
         log(Level.INFO, "Initializing FrogESP Addon...");
         try {
             final BufferedImage image = ImageIO.read(new URL(FROG_URL));
-            frogRatio = ((double)image.getWidth()) / ((double)image.getHeight());
+            frogRatio = ((double) image.getWidth()) / ((double) image.getHeight());
             final DynamicTexture dynamicTexture = new DynamicTexture(image);
             dynamicTexture.loadTexture(MC.getResourceManager());
             frog = MC.getTextureManager().getDynamicTextureLocation("FROG", dynamicTexture);
-        } catch(final IOException e) { e.printStackTrace(); }
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
         getRootnet().registerModule(this, new FrogEspModule());
     }
 }
