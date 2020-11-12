@@ -143,13 +143,23 @@ public final class FrogEspModule extends AddonModule {
         modelMatrix.load(modelView.asReadOnlyBuffer());
         projectionMatrix.load(projection.asReadOnlyBuffer());
 
-        final Vec3d camPos = ActiveRenderInfo.getCameraPosition();
-        final Vec3d eyePos = ActiveRenderInfo.projectViewFromEntity(renderViewEntity, MC.getRenderPartialTicks());
+        final float partialTicks = MC.getRenderPartialTicks();
+
+        final Vec3d eyePos = ActiveRenderInfo.projectViewFromEntity(renderViewEntity, partialTicks);
+
+        // this is such a stupid hack to get cam position
+        // rootnet mixins when
+        final double camX = eyePos.x - (renderViewEntity.prevPosX +
+                (renderViewEntity.posX - renderViewEntity.prevPosX) * partialTicks);
+        final double camY = eyePos.y - (renderViewEntity.prevPosY +
+                (renderViewEntity.posY - renderViewEntity.prevPosY) * partialTicks);
+        final double camZ = eyePos.z - (renderViewEntity.prevPosZ +
+                (renderViewEntity.posZ - renderViewEntity.prevPosZ) * partialTicks);
 
         final Vector4f pos = new Vector4f(
-                (float) ((camPos.x + eyePos.x) - (float) x),
-                (float) ((camPos.y + eyePos.y) - (float) y),
-                (float) ((camPos.z + eyePos.z) - (float) z),
+                (float) ((camX + eyePos.x) - (float) x),
+                (float) ((camY + eyePos.y) - (float) y),
+                (float) ((camZ + eyePos.z) - (float) z),
                 1.0f
         );
 
