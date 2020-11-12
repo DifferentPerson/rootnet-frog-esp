@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 
 @SuppressWarnings("unused")
-@RootnetAddon(name = "FrogESP", author = "ADifferentPerson", version = "1.1.0")
+@RootnetAddon(name = "FrogESP", author = "ADifferentPerson", version = "1.1.1")
 public final class FrogEspAddon extends Addon {
     private static final String FROG_URL = "https://i.imgur.com/UI94ded.png";
     private static final Minecraft MC = Minecraft.getMinecraft();

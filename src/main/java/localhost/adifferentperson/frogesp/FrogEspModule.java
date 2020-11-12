@@ -38,7 +38,7 @@ public final class FrogEspModule extends AddonModule {
             return;
         }
         final AbstractClientPlayer player = (AbstractClientPlayer) entityLivingBase;
-        if (player.equals(MC.player)) {
+        if (player.equals(MC.getRenderViewEntity())) {
             return;
         }
         e.setCancelled(true);
