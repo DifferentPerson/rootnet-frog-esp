@@ -34,7 +34,7 @@ repositories {
 }
 
 dependencies {
-    compile files("./libs/rootnet-api.jar")
+    compile files("libs/rootnet-api.jar")
 }
 
 import net.minecraftforge.gradle.user.ReobfMappingType
