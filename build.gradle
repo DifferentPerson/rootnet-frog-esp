@@ -45,3 +45,20 @@ reobf {
         setMappingType(net.minecraftforge.gradle.user.ReobfMappingType.NOTCH)
     }
 }
+
+task copyJar(type: Copy) {
+    def addonsFolder = "${System.properties['user.home']}${File.separator}rootNET${File.separator}addons"
+
+    if (!(new File(addonsFolder).exists())) {
+        return
+    }
+
+    delete fileTree(addonsFolder) {
+        include 'rootnet-frog-esp-*.jar'
+    }
+
+    from "$buildDir${File.separator}libs${File.separator}rootnet-frog-esp-${version}.jar"
+    into addonsFolder
+}
+
+build.finalizedBy(copyJar)
