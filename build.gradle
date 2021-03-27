@@ -27,8 +27,14 @@ minecraft {
     mappings = 'stable_39'
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
-    compile files('libs/rootnet-api.jar')
+    compile name: 'rootnet-api'
 }
 
 reobf {
