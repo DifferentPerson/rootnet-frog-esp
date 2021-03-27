@@ -10,7 +10,7 @@ import java.io.IOException;
  * Frog ESP addon class
  */
 @SuppressWarnings("unused")
-@RootnetAddon(name = "FrogESP", author = "ADifferentPerson", version = "1.1.1")
+@RootnetAddon(name = "FrogESP", author = "ADifferentPerson", version = "#VERSION#")
 public final class FrogEspAddon extends Addon {
 
     static final String FROG_URL = "https://i.imgur.com/UI94ded.png";
