@@ -12,6 +12,7 @@ FrogESP puts frog overlays on players in your game.
  - Thanks to snowslushy#6233 for editing the [frog image](https://i.imgur.com/UI94ded.png).
  - I don't know who took the original image, or who edited the mouth, or who added the sunglasses, so I can't give
  proper credit for that.
+ - Praise be to the frog.
  
  # Showcase
  ![FrogESP Demonstration](https://i.imgur.com/H2V02V5.png)
